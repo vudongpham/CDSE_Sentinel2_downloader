@@ -26,7 +26,7 @@ Search Sentinel-2 A,B data from  https://dataspace.copernicus.eu/ with some opti
 - aoi\
   The area of interest. Valid input:\
   a) .txt - text file Sentinel-2 tile ID per line in the format TXXXXX or XXXXX (eg., T31UGT, 31UGT) \
-  b) .shp, .gpkg, .geojson - vector file polygon geometries (points and lines are not tested yet).
+  b) .shp, .gpkg, .geojson - vector file polygon geometries (points and lines are not supported yet).
   
 - output_dir\
   The directory where the query result in JSON format will be stored \
