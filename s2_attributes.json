@@ -1,0 +1,102 @@
+[
+    {
+        "Name": "productType",
+        "ValueType": "String"
+    },
+    {
+        "Name": "origin",
+        "ValueType": "String"
+    },
+    {
+        "Name": "tileId",
+        "ValueType": "String"
+    },
+    {
+        "Name": "cloudCover",
+        "ValueType": "Double"
+    },
+    {
+        "Name": "coordinates",
+        "ValueType": "String"
+    },
+    {
+        "Name": "datastripId",
+        "ValueType": "String"
+    },
+    {
+        "Name": "orbitNumber",
+        "ValueType": "Integer"
+    },
+    {
+        "Name": "qualityInfo",
+        "ValueType": "Integer"
+    },
+    {
+        "Name": "qualityStatus",
+        "ValueType": "String"
+    },
+    {
+        "Name": "sourceProduct",
+        "ValueType": "String"
+    },
+    {
+        "Name": "processingDate",
+        "ValueType": "DateTimeOffset"
+    },
+    {
+        "Name": "productGroupId",
+        "ValueType": "String"
+    },
+    {
+        "Name": "lastOrbitNumber",
+        "ValueType": "Integer"
+    },
+    {
+        "Name": "operationalMode",
+        "ValueType": "String"
+    },
+    {
+        "Name": "processingLevel",
+        "ValueType": "String"
+    },
+    {
+        "Name": "processingCenter",
+        "ValueType": "String"
+    },
+    {
+        "Name": "processorVersion",
+        "ValueType": "String"
+    },
+    {
+        "Name": "granuleIdentifier",
+        "ValueType": "String"
+    },
+    {
+        "Name": "platformShortName",
+        "ValueType": "String"
+    },
+    {
+        "Name": "processingBaseline",
+        "ValueType": "String"
+    },
+    {
+        "Name": "instrumentShortName",
+        "ValueType": "String"
+    },
+    {
+        "Name": "relativeOrbitNumber",
+        "ValueType": "Integer"
+    },
+    {
+        "Name": "illuminationZenithAngle",
+        "ValueType": "Double"
+    },
+    {
+        "Name": "sourceProductOriginDate",
+        "ValueType": "String"
+    },
+    {
+        "Name": "platformSerialIdentifier",
+        "ValueType": "String"
+    }
+]
