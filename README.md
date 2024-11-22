@@ -78,14 +78,14 @@ password
   Path to the file containing the CDSE account info  username (first line) and password (second line)
 
 
-Example: Say you have the query result file named query_20241122T195540.json. Run the command:
+Example: Say you have the query result file named query.json. Run the command:
 
 Docker
 ```
 docker run -it --rm \
     -v $(pwd):$(pwd) \
     vudongpham/cdse-s2 download \
-    $(pwd)/test_data/query_20241122T195540.json \
+    $(pwd)/test_data/query.json \
     $(pwd)/download_dir \
     $(pwd)/test_data/secret.txt
 ```
@@ -93,7 +93,7 @@ docker run -it --rm \
 Python
 ```
 python download.py \
-    $(pwd)/test_data/query_20241122T195540.json \
+    $(pwd)/test_data/query.json \
     $(pwd)/download_dir \
     $(pwd)/test_data/secret.txt
 ```
