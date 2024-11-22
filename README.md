@@ -38,7 +38,7 @@ Search Sentinel-2 A,B data from  https://dataspace.copernicus.eu/ with some opti
 - -n | --no-action :  Dry search without saving JSON file, output_dir is not required 
 
 
-Example: find all Sentinel-2 images intersect with Berlin boundary (test_data/berlin_bound.gpkg ) from 2024-01-01 to 2024-06-30 with cloud cover < 75% \
+Example: find all Sentinel-2 images intersect with Berlin boundary (test_data/berlin_bound.gpkg ) from 2024-01-01 to 2024-06-30 with cloud cover < 75%. \
 Docker
 ```
 docker run -it --rm \
@@ -55,6 +55,23 @@ python search.py \
     --daterange 20240101,20240630 --cloudcover 0,75 \
     $(pwd)/test_data/berlin_bound.gpkg \
     $(pwd)/test_data
+```
+
+Query result looks something like this
+```
+...
+"@odata.mediaContentType": "application/octet-stream",
+        "Id": "fd292acb-9337-4842-84f1-f2c69ad02486",
+        "Name": "S2A_MSIL1C_20240108T101401_N0510_R022_T32UQD_20240108T105807.SAFE",
+        "ContentType": "application/octet-stream",
+        "ContentLength": 606111777,
+        "OriginDate": "2024-01-08T12:18:07.491000Z",
+        "PublicationDate": "2024-01-08T12:45:53.969146Z",
+        "ModificationDate": "2024-03-12T12:13:30.930987Z",
+        "Online": true,
+        "EvictionDate": "9999-12-31T23:59:59.999999Z",
+        "S3Path": "/eodata/Sentinel-2/MSI/L1C/2024/01/08/S2A_MSIL1C_20240108T101401_N0510_R022_T32UQD_20240108T105807.SAFE",
+...
 ```
 
 
