@@ -19,7 +19,7 @@ conda activate cdse-s2
 
 ### Run
 There are two modes <b>search</b> and <b>download</b>
-#### 1. Search (no crediential required)
+#### 1. Search (no credential required)
 Search Sentinel-2 A,B data from  https://dataspace.copernicus.eu/ with some optional filterings. Returned: query results in JSON format
 
 <i>Required arguments:</i>
@@ -58,7 +58,7 @@ python search.py \
 ```
 
 
-#### 2. Download (crediential required)
+#### 2. Download (credential required)
 Download data data from the query JSON file from <b>search</b> function. <br><br>
 <b>NOTE:</b> First, you need to have account on https://dataspace.copernicus.eu/.<br>
 Then store the account information in a file, for example: secret.txt. This file should contains only two lines, first is username, second is password
