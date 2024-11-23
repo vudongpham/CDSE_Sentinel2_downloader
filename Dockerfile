@@ -1,17 +1,11 @@
-# Use a lightweight base image with Conda pre-installed
-FROM continuumio/miniconda3
+# Use a lightweight Python image
+FROM python:3.11-slim
 
-# Set working directory
+# Install Python dependencies
+RUN pip install --no-cache-dir 'geopandas[all]'
+
+# Set the working directory
 WORKDIR /app
-
-# Copy environment.yml and install dependencies
-COPY environment.yml /app/environment.yml
-RUN conda env create -n CDSE -f environment.yml
-
-# Activate the environment and ensure it works
-RUN echo "source activate CDSE" > ~/.bashrc
-ENV PATH=/opt/conda/envs/CDSE/bin:$PATH
-ENV PROJ_LIB=/opt/conda/envs/CDSE/share/proj
 
 # Copy the Python script into the container
 COPY search.py .
