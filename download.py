@@ -37,7 +37,7 @@ def filtering_dir(image_id, image_name, downloadDir):
     return image_id_new, image_name_new
 
 # Read user name and password from secret file
-def get_secret(file_dir):
+def get_secret_from_file(file_dir):
     with open(file_dir, 'r') as file:
         data = [line.strip() for line in file]
     if len(data) < 2:
@@ -45,6 +45,11 @@ def get_secret(file_dir):
         sys.exit()
     user_name = data[0]
     password = data[1]
+    return user_name, password
+
+# Read user name and password from text
+def get_secret_from_text(string_in):
+    user_name, password = string_in.split(',')
     return user_name, password
 
 # Get token from CDSE
@@ -95,13 +100,16 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'secret',
-        help='Path to the file containing the <username> (first line) and <password> (second line) from https://dataspace.copernicus.eu/',
+        help='''
+        String <username>,<password> separated by ",".
+        Or path to the file containing the <username> (first line) and <password> (second line) from https://dataspace.copernicus.eu/
+        ''',
     )
     args = parser.parse_args()
 
     jsonFile = args.jsonFile
     downloadDir= args.downloadDir
-    secret_file = args.secret
+    secret = args.secret
 
     if not os.path.isfile(jsonFile):
         print(f'{jsonFile} does not exist!')
@@ -111,15 +119,15 @@ if __name__ == '__main__':
         print(f'{downloadDir} does not exist!')
         sys.exit()
     
-    if not os.path.isfile(secret_file):
-        print(f'{secret_file} does not exist!')
-        sys.exit()
+    if  os.path.isfile(secret):
+        get_secret = get_secret_from_file
+    else:
+        get_secret = get_secret_from_text
     
-
-
     images_id, image_names = read_json_results(jsonFile)
     images_id, image_names = filtering_dir(images_id, image_names, downloadDir)
-    username, password = get_secret(secret_file)
+    username, password = get_secret(secret)
+
 
     start_time = time.time()
 
