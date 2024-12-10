@@ -92,7 +92,8 @@ password
   The directory where the downloaded products will be stored.
 
 - secret\
-  Path to the file containing the CDSE account info  username (first line) and password (second line)
+  String <username>,<password> separated by ",".\
+  Or path to the file containing the <username> (first line) and <password> (second line) from https://dataspace.copernicus.eu/
 
 
 Example: Say you have the query result file named query.json. Run the command:
