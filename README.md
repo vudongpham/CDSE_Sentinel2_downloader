@@ -92,7 +92,7 @@ password
   The directory where the downloaded products will be stored.
 
 - secret\
-  String <username>,<password> separated by ",".\
+  String username,password separated by ",".\
   Or path to the file containing the <username> (first line) and <password> (second line) from https://dataspace.copernicus.eu/
 
 
