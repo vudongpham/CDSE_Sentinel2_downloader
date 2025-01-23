@@ -119,9 +119,14 @@ def fetch_all_data(query):
         return all_data
 
 
+rx_polygon_wkt = re.compile(r'^\s*POLYGON\s*\(.*\)\s*')
+
 # Query search if vector file is provided
-def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None):
-    aoi = convert_polygon_to_WKT(aoi_path)
+def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None) -> list:
+    if rx_polygon_wkt.match(aoi_path):
+        aoi = aoi_path
+    else:
+        aoi = convert_polygon_to_WKT(aoi_path)
 
     query = (
         f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq 'SENTINEL-2' and "
@@ -144,9 +149,11 @@ def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, ou
     else:
         print(f'No record found')
 
+    return data_return
+
 
 # Query search if .txt file is provided
-def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, outJson=None):
+def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, outJson=None) -> list:
     data_return = []
     
     for tile_id in list_ids:
@@ -173,6 +180,8 @@ def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, o
     else:
         print(f'No record found')
 
+    return data_return
+
 
         
         
@@ -183,7 +192,7 @@ if __name__ == '__main__':
 
     check = argparseCondition()
     
-    parser = argparse.ArgumentParser(prog='search', description="This tool for searching Sentinel-2 A,B from CDSE", add_help=True)
+    parser = argparse.ArgumentParser(prog='search', description="This tool for searching Sentinel-2 A,B,C from CDSE", add_help=True)
 
     parser.add_argument(
         '-d', '--daterange',
@@ -207,9 +216,18 @@ if __name__ == '__main__':
         metavar='',
         action='store_const'
     )
+
+    parser.add_argument('-f', '--forcelogs',
+                        help='Path to FORCE log file directory (Level-2 processing logs, directory will be searched recursively). '
+                             'Search results will only be generated for products that haven\'t been processed by FORCE yet.',
+                        default=None)
+
     parser.add_argument(
         'aoi',
-        help='The area of interest: 1) Vector file: .shp, .gpkg, .geojson or 2).txt file that contains list of Sentinel-2 tile IDs'
+        help='The area of interest:'
+             '1) Vector file: .shp, .gpkg, .geojson, or '
+             '2) .txt file that contains list of Sentinel-2 tile IDs, or'
+             '3) a WKT string of the polygon',
     )
     parser.add_argument(
         'output_dir',
@@ -226,22 +244,26 @@ if __name__ == '__main__':
 
     start_date, end_date = args.daterange
     cloud_min, cloud_max = args.cloudcover
-    aoi = os.path.normpath(args.aoi)
-
-    if not os.path.isfile(aoi):
-        print(f'{aoi} does not exist!')
-        sys.exit()
-    
-    if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
+    aoi = args.aoi
+    if rx_polygon_wkt.match(aoi):
         search_mode = search_by_aoi
         aoi_name = aoi
-    elif aoi.endswith('.txt'):
-        search_mode = search_by_list
-        aoi = read_list_id(aoi)
-        aoi_name = ','.join(x for x in aoi)
     else:
-        print(f'{aoi} has a invalid extension')
-        sys.exit()
+        os.path.normpath(args.aoi)
+        if not os.path.isfile(aoi):
+            print(f'{aoi} does not exist!')
+            sys.exit()
+
+        if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
+            search_mode = search_by_aoi
+            aoi_name = aoi
+        elif aoi.endswith('.txt'):
+            search_mode = search_by_list
+            aoi = read_list_id(aoi)
+            aoi_name = ','.join(x for x in aoi)
+        else:
+            print(f'{aoi} has a invalid extension')
+            sys.exit()
     
 
     if args.no_action:
@@ -262,7 +284,15 @@ if __name__ == '__main__':
         f" - AOI : {aoi_name}"
     , flush=True)
 
-    search_mode(start_date, end_date, cloud_min, cloud_max, aoi, outJson)
+    search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
 
+    # filter by FORCE logs
+
+
+    # write results to JSON file
+    if outJson is not None:
+        with open(f'{outJson}', 'w') as jsonfile:
+            json.dump(search_results, jsonfile, indent=4)
+        print(f'Saved to {outJson}')
 
 
