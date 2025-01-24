@@ -34,8 +34,11 @@ Search Sentinel-2 A,B data from  https://dataspace.copernicus.eu/ with some opti
 
 <i>Optional arguments:</i>
 - -d | --daterange: Start date and end date = date range to be considered. Valid values: [YYYYMMDD,YYYYMMDD] <br><br>
-- -c | --cloudcover :  Percent (land) cloud cover range to be considered. Valid values: [0,100] <br><br>
-- -n | --no-action :  Dry search without saving JSON file, output_dir is not required 
+- -c | --cloudcover:  Percent (land) cloud cover range to be considered. Valid values: [0,100] <br><br>
+- -n | --no-action:  Dry search without saving JSON file, output_dir is not required 
+- -f | --forcelogs: Path to FORCE log file directory (Level-2 processing logs, directory will be searched recursively). 
+                    Search results will only be generated for products that haven't been processed by FORCE yet.
+
 
 
 Example: find all Sentinel-2 images intersect with Berlin boundary (test_data/berlin_bound.gpkg ) from 2024-01-01 to 2024-06-30 with cloud cover < 75%. \

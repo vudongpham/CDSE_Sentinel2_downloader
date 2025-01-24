@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Union, Pattern, Generator
+
 import requests
 import geopandas as gpd
 from shapely.ops import transform
@@ -7,6 +10,7 @@ import re
 from datetime import datetime
 import os
 import sys
+
 
 # Checking input data
 class argparseCondition():
@@ -103,7 +107,8 @@ def read_list_id(aoi_path):
 # CDSE only allows maximum 1000 returned results per query, this function loops to get all results 
 def fetch_all_data(query):
         all_data = []
-        
+
+        i_pages = 0
         while query:
             # Fetch the data from the current query URL
             response = requests.get(query)
@@ -115,7 +120,6 @@ def fetch_all_data(query):
             
             # Check if there is a next page
             query = json_return.get('@odata.nextLink')
-        
         return all_data
 
 
@@ -182,11 +186,35 @@ def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, o
 
     return data_return
 
+def search_force_logs(dir_logs: Union[str, Path],
+                      rx: Union[Pattern, str] = None,
+                      recursive:bool = True) -> Generator[Path, None, None]:
+    """
+    Searches and returns FORCE sentinel-2 log files.
+    :param recursive: search recursively in subdirectories, defaults to True
+    :param dir_logs: path to directory containing the FORCE log files.
+    :param rx: regular expression to match log files
+    :return:
+    """
+    if rx is None:
+        rx = re.compile(r'(S2|LT|LE|LC).*\.log')
+    elif isinstance(rx, str):
+        rx = re.compile(rx)
 
-        
-        
-        
-        
+    assert isinstance(rx, Pattern)
+
+    dir_logs = Path(dir_logs)
+    assert dir_logs.is_dir(), f'Not a directory: {dir_logs}'
+    with os.scandir(dir_logs) as search:
+
+        for entry in search:
+            if entry.is_dir() and recursive:
+                for result in search_force_logs(entry.path, rx, recursive=recursive):
+                    yield  result
+            elif entry.is_file():
+                if rx.match(entry.name):
+                    yield Path(entry.path)
+
 
 if __name__ == '__main__':
 
@@ -270,12 +298,15 @@ if __name__ == '__main__':
         outJson = None
     else:
         output_dir = os.path.normpath(args.output_dir)
-        if not os.path.isdir(output_dir):
-            print(f'{output_dir} does not exist!')
-            sys.exit()
+        if output_dir.endswith('.json'):
+            outJson = output_dir
         else:
-            Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
-            outJson = os.path.join(output_dir, Json_file_name)
+            if not os.path.isdir(output_dir):
+                print(f'{output_dir} does not exist!')
+                sys.exit()
+            else:
+                Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
+                outJson = os.path.join(output_dir, Json_file_name)
 
     print(
         "Search all Sentinel-2 A,B scenes:\n"
@@ -286,8 +317,13 @@ if __name__ == '__main__':
 
     search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
 
-    # filter by FORCE logs
-
+    # exclude scenes that have been already processed by FORCE
+    if args.forcelogs:
+        rx = re.compile(r'S2[ABCD]_MSIL1C.*\.log')
+        s2_logs = list(search_force_logs(args.forcelogs, rx, recursive=True))
+        processed_scenes = [os.path.splitext(f.name)[0] for f in s2_logs]
+        print(f'{len(processed_scenes)} already processed by FORCE')
+        search_results = [r for r in search_results if r['Name'] not in processed_scenes]
 
     # write results to JSON file
     if outJson is not None:

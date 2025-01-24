@@ -2,11 +2,11 @@ import os
 import unittest
 from pathlib import Path
 
-from search import search_by_list, search_by_aoi
+from search import search_by_list, search_by_aoi, search_force_logs
 
 ROOT = Path(__file__).parents[1]
 DIR_TESTDATA = ROOT / 'test_data'
-
+DIR_FORCELOGS = DIR_TESTDATA / 'force_logs'
 
 class FORCETestCase(unittest.TestCase):
 
@@ -43,9 +43,22 @@ class FORCETestCase(unittest.TestCase):
         data_return = search_by_list('2024-01-01', '2024-01-23',0, 100, list_ids)
         self.assertTrue(len(data_return) != 0)
 
-    def test_search_exclude_force(self):
+    def test_search_force_logs(self):
 
-        list_ids = ['32UNC']
+        examples = [
+            (8, {}), # all logs, recursively
+            (5, {'recursive': False}), # all logs, non-recursively
+            (5, {'rx': r'^S2[ABCD]_MSIL1C.*\.log$'}), # only S2 logs, recursively
+            (3, {'rx': r'^S2[ABCD]_MSIL1C.*\.log$', 'recursive': False}), # only S2 logs, non-recursively
+            (3, {'rx': r'^L(T04|T05|E07|C08|C09).*\.log$'}),  # only Landsat logs, recursively
+            (2, {'rx': r'^L(T04|T05|E07|C08|C09).*\.log$', 'recursive': False}),  # only Landsat logs, non-recursively
+        ]
+        for (n_expected, kwargs) in examples:
+            logs = list(search_force_logs(DIR_FORCELOGS, **kwargs))
+            n = len(logs)
+            self.assertEqual(n_expected, n, msg=f'Expected {n_expected} logfiles, got {n} with kwargs "{kwargs}"')
+
+
 
 
 if __name__ == '__main__':
