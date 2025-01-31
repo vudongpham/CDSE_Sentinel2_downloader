@@ -1,3 +1,6 @@
+from pathlib import Path
+from typing import Union, Pattern, Generator
+
 import requests
 import geopandas as gpd
 from shapely.ops import transform
@@ -7,6 +10,7 @@ import re
 from datetime import datetime
 import os
 import sys
+
 
 # Checking input data
 class argparseCondition():
@@ -103,7 +107,8 @@ def read_list_id(aoi_path):
 # CDSE only allows maximum 1000 returned results per query, this function loops to get all results 
 def fetch_all_data(query):
         all_data = []
-        
+
+        i_pages = 0
         while query:
             # Fetch the data from the current query URL
             response = requests.get(query)
@@ -115,13 +120,17 @@ def fetch_all_data(query):
             
             # Check if there is a next page
             query = json_return.get('@odata.nextLink')
-        
         return all_data
 
 
+rx_polygon_wkt = re.compile(r'^\s*POLYGON\s*\(.*\)\s*')
+
 # Query search if vector file is provided
-def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None):
-    aoi = convert_polygon_to_WKT(aoi_path)
+def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None) -> list:
+    if rx_polygon_wkt.match(aoi_path):
+        aoi = aoi_path
+    else:
+        aoi = convert_polygon_to_WKT(aoi_path)
 
     query = (
         f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq 'SENTINEL-2' and "
@@ -144,9 +153,11 @@ def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, ou
     else:
         print(f'No record found')
 
+    return data_return
+
 
 # Query search if .txt file is provided
-def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, outJson=None):
+def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, outJson=None) -> list:
     data_return = []
     
     for tile_id in list_ids:
@@ -173,17 +184,43 @@ def search_by_list(startDate, endDate, cloudCoverMin, cloudCoverMax, list_ids, o
     else:
         print(f'No record found')
 
+    return data_return
 
-        
-        
-        
-        
+def search_force_logs(dir_logs: Union[str, Path],
+                      rx: Union[Pattern, str] = None,
+                      recursive:bool = True) -> Generator[Path, None, None]:
+    """
+    Searches and returns FORCE sentinel-2 log files.
+    :param recursive: search recursively in subdirectories, defaults to True
+    :param dir_logs: path to directory containing the FORCE log files.
+    :param rx: regular expression to match log files
+    :return:
+    """
+    if rx is None:
+        rx = re.compile(r'(S2|LT|LE|LC).*\.log')
+    elif isinstance(rx, str):
+        rx = re.compile(rx)
+
+    assert isinstance(rx, Pattern)
+
+    dir_logs = Path(dir_logs)
+    assert dir_logs.is_dir(), f'Not a directory: {dir_logs}'
+    with os.scandir(dir_logs) as search:
+
+        for entry in search:
+            if entry.is_dir() and recursive:
+                for result in search_force_logs(entry.path, rx, recursive=recursive):
+                    yield  result
+            elif entry.is_file():
+                if rx.match(entry.name):
+                    yield Path(entry.path)
+
 
 if __name__ == '__main__':
 
     check = argparseCondition()
     
-    parser = argparse.ArgumentParser(prog='search', description="This tool for searching Sentinel-2 A,B from CDSE", add_help=True)
+    parser = argparse.ArgumentParser(prog='search', description="This tool for searching Sentinel-2 A,B,C from CDSE", add_help=True)
 
     parser.add_argument(
         '-d', '--daterange',
@@ -207,9 +244,18 @@ if __name__ == '__main__':
         metavar='',
         action='store_const'
     )
+
+    parser.add_argument('-f', '--forcelogs',
+                        help='Path to FORCE log file directory (Level-2 processing logs, directory will be searched recursively). '
+                             'Search results will only be generated for products that haven\'t been processed by FORCE yet.',
+                        default=None)
+
     parser.add_argument(
         'aoi',
-        help='The area of interest: 1) Vector file: .shp, .gpkg, .geojson or 2).txt file that contains list of Sentinel-2 tile IDs'
+        help='The area of interest:'
+             '1) Vector file: .shp, .gpkg, .geojson, or '
+             '2) .txt file that contains list of Sentinel-2 tile IDs, or'
+             '3) a WKT string of the polygon',
     )
     parser.add_argument(
         'output_dir',
@@ -226,34 +272,41 @@ if __name__ == '__main__':
 
     start_date, end_date = args.daterange
     cloud_min, cloud_max = args.cloudcover
-    aoi = os.path.normpath(args.aoi)
-
-    if not os.path.isfile(aoi):
-        print(f'{aoi} does not exist!')
-        sys.exit()
-    
-    if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
+    aoi = args.aoi
+    if rx_polygon_wkt.match(aoi):
         search_mode = search_by_aoi
         aoi_name = aoi
-    elif aoi.endswith('.txt'):
-        search_mode = search_by_list
-        aoi = read_list_id(aoi)
-        aoi_name = ','.join(x for x in aoi)
     else:
-        print(f'{aoi} has a invalid extension')
-        sys.exit()
+        os.path.normpath(args.aoi)
+        if not os.path.isfile(aoi):
+            print(f'{aoi} does not exist!')
+            sys.exit()
+
+        if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
+            search_mode = search_by_aoi
+            aoi_name = aoi
+        elif aoi.endswith('.txt'):
+            search_mode = search_by_list
+            aoi = read_list_id(aoi)
+            aoi_name = ','.join(x for x in aoi)
+        else:
+            print(f'{aoi} has a invalid extension')
+            sys.exit()
     
 
     if args.no_action:
         outJson = None
     else:
         output_dir = os.path.normpath(args.output_dir)
-        if not os.path.isdir(output_dir):
-            print(f'{output_dir} does not exist!')
-            sys.exit()
+        if output_dir.endswith('.json'):
+            outJson = output_dir
         else:
-            Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
-            outJson = os.path.join(output_dir, Json_file_name)
+            if not os.path.isdir(output_dir):
+                print(f'{output_dir} does not exist!')
+                sys.exit()
+            else:
+                Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
+                outJson = os.path.join(output_dir, Json_file_name)
 
     print(
         "Search all Sentinel-2 A,B scenes:\n"
@@ -262,7 +315,20 @@ if __name__ == '__main__':
         f" - AOI : {aoi_name}"
     , flush=True)
 
-    search_mode(start_date, end_date, cloud_min, cloud_max, aoi, outJson)
+    search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
 
+    # exclude scenes that have been already processed by FORCE
+    if args.forcelogs:
+        rx = re.compile(r'S2[ABCD]_MSIL1C.*\.log')
+        s2_logs = list(search_force_logs(args.forcelogs, rx, recursive=True))
+        processed_scenes = [os.path.splitext(f.name)[0] for f in s2_logs]
+        print(f'{len(processed_scenes)} already processed by FORCE')
+        search_results = [r for r in search_results if r['Name'] not in processed_scenes]
+
+    # write results to JSON file
+    if outJson is not None:
+        with open(f'{outJson}', 'w') as jsonfile:
+            json.dump(search_results, jsonfile, indent=4)
+        print(f'Saved to {outJson}')
 
 
