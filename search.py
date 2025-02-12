@@ -308,12 +308,15 @@ if __name__ == '__main__':
                 Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
                 outJson = os.path.join(output_dir, Json_file_name)
 
-    print(
-        "Search all Sentinel-2 A,B scenes:\n"
-        f" - From {start_date} to {end_date}\n"
-        f" - {cloud_min} =< Cloud cover <= {cloud_max}\n"
-        f" - AOI : {aoi_name}"
-    , flush=True)
+    info = ["Search all Sentinel-2 A,B scenes:",
+            f" - From {start_date} to {end_date}",
+            f" - {cloud_min} =< Cloud cover <= {cloud_max}",
+            f" - AOI : {aoi_name}"]
+
+    if args.forcelogs:
+        info.append(f' - FORCE Logs: {args.forcelogs}')
+
+    print('\n'.join(info), flush=True)
 
     search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
 
