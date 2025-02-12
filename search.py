@@ -324,9 +324,11 @@ if __name__ == '__main__':
     if args.forcelogs:
         rx = re.compile(r'S2[ABCD]_MSIL1C.*\.log')
         s2_logs = list(search_force_logs(args.forcelogs, rx, recursive=True))
-        processed_scenes = [os.path.splitext(f.name)[0] for f in s2_logs]
-        print(f'{len(processed_scenes)} already processed by FORCE')
-        search_results = [r for r in search_results if r['Name'] not in processed_scenes]
+        s2_logs = [os.path.splitext(f.name)[0] for f in s2_logs]
+        search_results_new = [r for r in search_results if r['Name'] not in s2_logs]
+        print(f'Already processed by FORCE: {len(search_results)-len(search_results_new)}')
+        search_results = search_results_new
+        print(f'Total records left: {len(search_results)}')
 
     # write results to JSON file
     if outJson is not None:
