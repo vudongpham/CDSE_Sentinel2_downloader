@@ -308,12 +308,15 @@ if __name__ == '__main__':
                 Json_file_name = f"query_{datetime.now().strftime('%Y%m%dT%H%M%S')}.json"
                 outJson = os.path.join(output_dir, Json_file_name)
 
-    print(
-        "Search all Sentinel-2 A,B scenes:\n"
-        f" - From {start_date} to {end_date}\n"
-        f" - {cloud_min} =< Cloud cover <= {cloud_max}\n"
-        f" - AOI : {aoi_name}"
-    , flush=True)
+    info = ["Search all Sentinel-2 A,B scenes:",
+            f" - From {start_date} to {end_date}",
+            f" - {cloud_min} =< Cloud cover <= {cloud_max}",
+            f" - AOI : {aoi_name}"]
+
+    if args.forcelogs:
+        info.append(f' - FORCE Logs: {args.forcelogs}')
+
+    print('\n'.join(info), flush=True)
 
     search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
 
@@ -321,9 +324,11 @@ if __name__ == '__main__':
     if args.forcelogs:
         rx = re.compile(r'S2[ABCD]_MSIL1C.*\.log')
         s2_logs = list(search_force_logs(args.forcelogs, rx, recursive=True))
-        processed_scenes = [os.path.splitext(f.name)[0] for f in s2_logs]
-        print(f'{len(processed_scenes)} already processed by FORCE')
-        search_results = [r for r in search_results if r['Name'] not in processed_scenes]
+        s2_logs = [os.path.splitext(f.name)[0] for f in s2_logs]
+        search_results_new = [r for r in search_results if r['Name'] not in s2_logs]
+        print(f'Already processed by FORCE: {len(search_results)-len(search_results_new)}')
+        search_results = search_results_new
+        print(f'Total records left: {len(search_results)}')
 
     # write results to JSON file
     if outJson is not None:
