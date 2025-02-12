@@ -30,23 +30,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          channels: conda-forge,defaults
-          channel-priority: true
-          environment-file: environment.yml
-          activate-environment: CDSE
-          clean-patched-environment-file: false
-
-      - name: Conda Environment Info
+      - name: Install dependencies
         run: |
-          conda install pytest
-          conda info
-          conda list
+          pip install --no-cache-dir 'geopandas[all]'
+          pip install pytest
 
       - name: Run unittests
         run: |
           echo "$(pwd)"
           export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-          pytest
