@@ -75,7 +75,7 @@ def convert_polygon_to_WKT(aoi_path):
         aoi = aoi.dissolve()
 
     # Reduce the polygon geometries by 0.1 degree (WGS84) for the query
-    aoi = aoi.set_geometry(aoi.geometry.simplify(tolerance=0.1, preserve_topology=False))
+    aoi = aoi.set_geometry(aoi.geometry.simplify(tolerance=0.1, preserve_topology=True))
 
     # Output the reduced polygon to see what it look like
     # aoi.to_file('test.gpkg', driver='GPKG')
