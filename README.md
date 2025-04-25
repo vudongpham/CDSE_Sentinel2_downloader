@@ -4,18 +4,15 @@ Search and download Sentinel-2 A,B (L1C) from https://dataspace.copernicus.eu/ u
 
 ### Install with Docker image (recommended)
 ```
-docker pull vudongpham/cdse-s2
+docker pull vudongpham/cdse-s2:latest
 ```
 
-### Install with conda 
-1. Create new environment
+### Install with python
+
 ```
-conda env create -n cdse-s2 -f environment.yml
+python -m pip install git+https://github.com/vudongpham/FORCE_TS_Instant_View.git
 ```
-2. Activate it
-```
-conda activate cdse-s2
-```
+
 
 ### Run
 There are two modes <b>search</b> and <b>download</b>
