@@ -11,9 +11,13 @@ docker pull vudongpham/cdse-s2:latest
 ```
 
 ### Install with python
-
+With Git installed in your machine
 ```
 python -m pip install git+https://github.com/vudongpham/CDSE_Sentinel2_downloader.git
+```
+Without Git
+```
+pip install https://github.com/vudongpham/CDSE_Sentinel2_downloader/archive/refs/heads/main.zip
 ```
 
 
