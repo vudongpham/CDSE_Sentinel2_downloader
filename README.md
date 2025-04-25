@@ -43,7 +43,7 @@ Docker
 ```
 docker run -it --rm \
     -v $(pwd):$(pwd) \
-    vudongpham/cdse-s2 search \
+    vudongpham/cdse-s2 cdse-search \
     --daterange 20240101,20240630 --cloudcover 0,75 \
     $(pwd)/test_data/berlin_boundary.gpkg \
     $(pwd)/test_data
@@ -51,7 +51,7 @@ docker run -it --rm \
 
 Python
 ```
-python search.py \
+cdse-search \
     --daterange 20240101,20240630 --cloudcover 0,75 \
     $(pwd)/test_data/berlin_boundary.gpkg \
     $(pwd)/test_data
@@ -102,7 +102,7 @@ Docker
 ```
 docker run -it --rm \
     -v $(pwd):$(pwd) \
-    vudongpham/cdse-s2 download \
+    vudongpham/cdse-s2 cdse-download \
     $(pwd)/test_data/query.json \
     $(pwd)/download_dir \
     $(pwd)/test_data/secret.txt
@@ -110,7 +110,7 @@ docker run -it --rm \
 
 Python
 ```
-python download.py \
+cdse-download \
     $(pwd)/test_data/query.json \
     $(pwd)/download_dir \
     $(pwd)/test_data/secret.txt
