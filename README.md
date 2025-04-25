@@ -2,7 +2,7 @@
 
 Search and download Sentinel-2 A,B (L1C) from https://dataspace.copernicus.eu/ using OData query
 
-### Install with Docker image (recommended)
+### Install with Docker image
 ```
 docker pull vudongpham/cdse-s2:latest
 ```
