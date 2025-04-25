@@ -1,7 +1,3 @@
-> [!WARNING]  
-> ## At the moment, using AOI file for `cdse-search` only return Sentinel-2 images from single orbit (i.e.., only images with tag `__R122__`). This is related to the OData API from CDSE, I'm still working on this.
-> ## If this warning is still here, the issue is still not resolved, please using the Sentinel-2 ID list for `cdse-search` to avoid potential missing data.
-
 # CDSE Sentinel-2 Downloader
 
 Search and download Sentinel-2 A,B (L1C) from https://dataspace.copernicus.eu/ using OData query
@@ -27,7 +23,7 @@ Search Sentinel-2 A,B data from  https://dataspace.copernicus.eu/ with some opti
 - aoi\
   The area of interest. Valid input:\
   a) .txt - text file Sentinel-2 tile ID per line in the format TXXXXX or XXXXX (eg., T31UGT, 31UGT) \
-  b) .shp, .gpkg, .geojson - vector file polygon geometries (points and lines are not supported yet).
+  b) .shp, .gpkg, .geojson - vector file polygon geometries.
   
 - output_dir\
   The directory where the query result in JSON format will be stored \
