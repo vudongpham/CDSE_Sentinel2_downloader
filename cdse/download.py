@@ -87,8 +87,7 @@ def download(token, image_id, image_name, downloadDir):
     return 1
 
 
-if __name__ == '__main__':
-
+def main():
     parser = argparse.ArgumentParser(prog='download', description="This tool for downloading Sentinel-2 A,B from CDSE", add_help=True)
     parser.add_argument(
         'jsonFile',
@@ -154,3 +153,7 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print("Process interrupted by user. Exiting...")
             break
+
+if __name__ == '__main__':
+    main()
+    

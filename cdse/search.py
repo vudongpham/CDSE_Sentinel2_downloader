@@ -106,21 +106,21 @@ def read_list_id(aoi_path):
 
 # CDSE only allows maximum 1000 returned results per query, this function loops to get all results 
 def fetch_all_data(query):
-        all_data = []
+    all_data = []
 
-        i_pages = 0
-        while query:
-            # Fetch the data from the current query URL
-            response = requests.get(query)
+    i_pages = 0
+    while query:
+        # Fetch the data from the current query URL
+        response = requests.get(query)
 
-            json_return = response.json()
-            
-            # Add the data from the current page to the list
-            all_data.extend(json_return.get('value', []))
-            
-            # Check if there is a next page
-            query = json_return.get('@odata.nextLink')
-        return all_data
+        json_return = response.json()
+        
+        # Add the data from the current page to the list
+        all_data.extend(json_return.get('value', []))
+        
+        # Check if there is a next page
+        query = json_return.get('@odata.nextLink')
+    return all_data
 
 
 rx_polygon_wkt = re.compile(r'^\s*POLYGON\s*\(.*\)\s*')
@@ -215,9 +215,7 @@ def search_force_logs(dir_logs: Union[str, Path],
                 if rx.match(entry.name):
                     yield Path(entry.path)
 
-
-if __name__ == '__main__':
-
+def main():
     check = argparseCondition()
     
     parser = argparse.ArgumentParser(prog='search', description="This tool for searching Sentinel-2 A,B,C from CDSE", add_help=True)
@@ -336,4 +334,5 @@ if __name__ == '__main__':
             json.dump(search_results, jsonfile, indent=4)
         print(f'Saved to {outJson}')
 
-
+if __name__ == '__main__':
+    main()
