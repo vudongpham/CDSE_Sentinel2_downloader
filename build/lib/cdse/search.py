@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Union, Pattern, Generator
-
+from importlib.resources import files
 import requests
 import geopandas as gpd
 from shapely.ops import transform
@@ -54,37 +54,52 @@ class argparseCondition():
             raise argparse.ArgumentTypeError(f"Invalid input: {value}. Expected format is 'x,y' with x and y between 0 and 100.")
 
 
-# Convert vector file to WKT string
-def convert_polygon_to_WKT(aoi_path):
-    def drop_z(geometry):
-        if geometry.has_z:
-            return transform(lambda x, y, z=None: (x, y), geometry)
-        return geometry
+# # Convert vector file to WKT string
+# def convert_polygon_to_WKT(aoi_path):
+#     def drop_z(geometry):
+#         if geometry.has_z:
+#             return transform(lambda x, y, z=None: (x, y), geometry)
+#         return geometry
 
-    # Read vector file
+#     # Read vector file
+#     aoi = gpd.read_file(aoi_path)
+
+#     # Reproject to WGS84
+#     aoi = aoi.to_crs("EPSG:4326")
+
+#     # Drop Z axis if any
+#     aoi["geometry"] = aoi["geometry"].apply(drop_z)
+
+#     # Disolve multipolygon
+#     if len(aoi) > 1:
+#         aoi = aoi.dissolve()
+
+#     # Reduce the polygon geometries by 0.1 degree (WGS84) for the query
+#     aoi = aoi.set_geometry(aoi.geometry.simplify(tolerance=0.1, preserve_topology=True))
+
+#     # Output the reduced polygon to see what it look like
+#     # aoi.to_file('test.gpkg', driver='GPKG')
+
+#     # Get geometry_wkt
+#     aoi['geometry_wkt'] = aoi['geometry'].apply(lambda geom: geom.wkt if geom else None)
+
+#     # Return string
+#     return aoi[['geometry_wkt']].values[0][0]
+
+
+def convert_aoi_to_s2idlist(aoi_path):
     aoi = gpd.read_file(aoi_path)
+    s2_path = files("cdse.aux_data").joinpath("sentinel2_grid.gpkg")
+    s2_grid = gpd.read_file(s2_path)
 
-    # Reproject to WGS84
-    aoi = aoi.to_crs("EPSG:4326")
+    if aoi.crs != s2_grid.crs:
+        aoi = aoi.to_crs(s2_grid.crs)
 
-    # Drop Z axis if any
-    aoi["geometry"] = aoi["geometry"].apply(drop_z)
+    intersection = gpd.overlay(aoi, s2_grid, how='intersection')
 
-    # Disolve multipolygon
-    if len(aoi) > 1:
-        aoi = aoi.dissolve()
+    s2_id_list = intersection['PRFID'].unique()
 
-    # Reduce the polygon geometries by 0.1 degree (WGS84) for the query
-    aoi = aoi.set_geometry(aoi.geometry.simplify(tolerance=0.1, preserve_topology=True))
-
-    # Output the reduced polygon to see what it look like
-    # aoi.to_file('test.gpkg', driver='GPKG')
-
-    # Get geometry_wkt
-    aoi['geometry_wkt'] = aoi['geometry'].apply(lambda geom: geom.wkt if geom else None)
-
-    # Return string
-    return aoi[['geometry_wkt']].values[0][0]
+    return s2_id_list
 
 
 # Read list of Sentinel-2 id if .txt file is provided
@@ -126,34 +141,34 @@ def fetch_all_data(query):
 rx_polygon_wkt = re.compile(r'^\s*POLYGON\s*\(.*\)\s*')
 
 # Query search if vector file is provided
-def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None) -> list:
-    if rx_polygon_wkt.match(aoi_path):
-        aoi = aoi_path
-    else:
-        aoi = convert_polygon_to_WKT(aoi_path)
+# def search_by_aoi(startDate, endDate, cloudCoverMin, cloudCoverMax, aoi_path, outJson=None) -> list:
+#     if rx_polygon_wkt.match(aoi_path):
+#         aoi = aoi_path
+#     else:
+#         aoi = convert_polygon_to_WKT(aoi_path)
 
-    query = (
-        f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq 'SENTINEL-2' and "
-        f"Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq 'S2MSI1C') and "
-        f"ContentDate/Start ge {startDate}T00:00:00.000Z and ContentDate/Start le {endDate}T00:11:00.000Z and "
-        f"Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value ge {cloudCoverMin:.2f}) and " 
-        f"Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value le {cloudCoverMax:.2f}) and " 
-        f"OData.CSC.Intersects(area=geography'SRID=4326;{aoi}')"
-        f"&$top=1000" 
-    )
+#     query = (
+#         f"https://catalogue.dataspace.copernicus.eu/odata/v1/Products?$filter=Collection/Name eq 'SENTINEL-2' and "
+#         f"Attributes/OData.CSC.StringAttribute/any(att:att/Name eq 'productType' and att/OData.CSC.StringAttribute/Value eq 'S2MSI1C') and "
+#         f"ContentDate/Start ge {startDate}T00:00:00.000Z and ContentDate/Start le {endDate}T00:11:00.000Z and "
+#         f"Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value ge {cloudCoverMin:.2f}) and " 
+#         f"Attributes/OData.CSC.DoubleAttribute/any(att:att/Name eq 'cloudCover' and att/OData.CSC.DoubleAttribute/Value le {cloudCoverMax:.2f}) and " 
+#         f"OData.CSC.Intersects(area=geography'SRID=4326;{aoi}')"
+#         f"&$top=1000" 
+#     )
 
-    data_return = fetch_all_data(query)
+#     data_return = fetch_all_data(query)
 
-    if len(data_return) > 0:
-        print(f'Total records: {len(data_return)}')
-        if outJson is not None:
-            with open(f'{outJson}', 'w') as jsonfile:
-                json.dump(data_return, jsonfile, indent = 4)
-            print(f'Saved to {outJson}')
-    else:
-        print(f'No record found')
+#     if len(data_return) > 0:
+#         print(f'Total records: {len(data_return)}')
+#         if outJson is not None:
+#             with open(f'{outJson}', 'w') as jsonfile:
+#                 json.dump(data_return, jsonfile, indent = 4)
+#             print(f'Saved to {outJson}')
+#     else:
+#         print(f'No record found')
 
-    return data_return
+#     return data_return
 
 
 # Query search if .txt file is provided
@@ -271,26 +286,24 @@ def main():
     start_date, end_date = args.daterange
     cloud_min, cloud_max = args.cloudcover
     aoi = args.aoi
-    if rx_polygon_wkt.match(aoi):
-        search_mode = search_by_aoi
-        aoi_name = aoi
-    else:
-        os.path.normpath(args.aoi)
-        if not os.path.isfile(aoi):
-            print(f'{aoi} does not exist!')
-            sys.exit()
 
-        if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
-            search_mode = search_by_aoi
-            aoi_name = aoi
-        elif aoi.endswith('.txt'):
-            search_mode = search_by_list
-            aoi = read_list_id(aoi)
-            aoi_name = ','.join(x for x in aoi)
-        else:
-            print(f'{aoi} has a invalid extension')
-            sys.exit()
-    
+    os.path.normpath(args.aoi)
+    if not os.path.isfile(aoi):
+        print(f'{aoi} does not exist!')
+        sys.exit()
+
+    if aoi.endswith(tuple(['.gpkg', '.shp', '.csv'])):
+        search_mode = search_by_list
+        s2_list = convert_aoi_to_s2idlist(aoi)
+        aoi_name = aoi
+    elif aoi.endswith('.txt'):
+        search_mode = search_by_list
+        s2_list = read_list_id(aoi)
+        aoi_name = ','.join(x for x in aoi)
+    else:
+        print(f'{aoi} has a invalid extension')
+        sys.exit()
+
 
     if args.no_action:
         outJson = None
@@ -316,7 +329,7 @@ def main():
 
     print('\n'.join(info), flush=True)
 
-    search_results = search_mode(start_date, end_date, cloud_min, cloud_max, aoi)
+    search_results = search_mode(start_date, end_date, cloud_min, cloud_max, s2_list)
 
     # exclude scenes that have been already processed by FORCE
     if args.forcelogs:

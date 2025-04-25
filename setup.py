@@ -8,7 +8,10 @@ setup(
         "requests",
         "geopandas",
 
-    ],  
+    ],
+    package_data={
+        'cdse': ['aux_data/*'],
+    },  
     python_requires=">=3.7",  
     entry_points={
         'console_scripts': [
