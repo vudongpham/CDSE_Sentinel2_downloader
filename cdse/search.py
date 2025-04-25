@@ -301,7 +301,7 @@ def main():
     elif aoi.endswith('.txt'):
         search_mode = search_by_list
         s2_list = read_list_id(aoi)
-        aoi_name = ','.join(x for x in aoi)
+        aoi_name = ','.join(x for x in s2_list)
     else:
         print(f'{aoi} has a invalid extension')
         sys.exit()
