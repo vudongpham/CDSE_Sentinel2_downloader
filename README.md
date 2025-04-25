@@ -10,7 +10,7 @@ docker pull vudongpham/cdse-s2:latest
 ### Install with python
 
 ```
-python -m pip install git+https://github.com/vudongpham/FORCE_TS_Instant_View.git
+python -m pip install git+https://github.com/vudongpham/CDSE_Sentinel2_downloader.git
 ```
 
 
