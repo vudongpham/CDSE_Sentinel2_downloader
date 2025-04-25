@@ -17,7 +17,7 @@ python -m pip install git+https://github.com/vudongpham/CDSE_Sentinel2_downloade
 ```
 Without Git
 ```
-pip install https://github.com/vudongpham/CDSE_Sentinel2_downloader/archive/refs/heads/main.zip
+python -m pip install https://github.com/vudongpham/CDSE_Sentinel2_downloader/archive/refs/heads/main.zip
 ```
 
 
