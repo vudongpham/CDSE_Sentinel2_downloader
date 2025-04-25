@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> Using WKT string for `cdse-search` is no longer supported! 
+
 # CDSE Sentinel-2 Downloader
 
 Search and download Sentinel-2 A,B (L1C) from https://dataspace.copernicus.eu/ using OData query
