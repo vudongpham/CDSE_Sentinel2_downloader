@@ -342,6 +342,14 @@ def main():
         search_results = search_results_new
         print(f'Total records left: {len(search_results)}')
 
+    if len(search_results) > 0:
+        images_size = [search_results[i]['ContentLength'] for i in range(len(search_results))]
+        images_size = sum(images_size)
+        images_size_gb = images_size / (1024 ** 3)
+        print(f"Total data volume: {images_size_gb:.2f} GB")
+        print(f"Sentinel-2 tiles: ", end='')
+        print(*s2_list, sep=',')
+
     # write results to JSON file
     if outJson is not None:
         with open(f'{outJson}', 'w') as jsonfile:
