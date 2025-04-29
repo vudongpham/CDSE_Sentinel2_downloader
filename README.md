@@ -9,6 +9,10 @@ Search and download Sentinel-2 A,B (L1C) from https://dataspace.copernicus.eu/ u
 ```
 docker pull vudongpham/cdse-s2:latest
 ```
+### Install with Singularity
+```
+singularity pull -F ~/cdse-s2_latest.sif docker://vudongpham/cdse-s2:latest
+```
 
 ### Install with python
 With Git installed in your machine
