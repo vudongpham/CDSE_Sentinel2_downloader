@@ -136,6 +136,7 @@ def main():
     for i in range(len(images_id)):
         current_time = time.time()
         durations = current_time - start_time
+        image_path = os.path.join(downloadDir, f'{image_names}.zip')
 
         # CDSE token expire after 10 minutes (600 seconds), new token is refreshed after 550 seconds
         if durations > 550:
@@ -147,8 +148,12 @@ def main():
             print(f'Done {i + 1} / {len(image_names)} : {image_names[i]}', flush=True)
         except Exception as e:
             print(f"Failed to download: {image_names[i]}")
+            if os.path.isfile(image_path):
+                os.remove(image_path)
         except KeyboardInterrupt:
             print("Process interrupted by user. Exiting...")
+            if os.path.isfile(image_path):
+                os.remove(image_path)
             break
 
 if __name__ == '__main__':
