@@ -1,2 +1,5 @@
 tmp
 build
+*.egg-info
+__pycache__/
+*.part
